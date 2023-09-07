@@ -698,6 +698,30 @@ else:
 
   <script src="${ static('desktop/ext/js/datatables-paging-0.1.js') }" type="text/javascript" charset="utf-8"></script>
 
+  <script type="text/template" id="qq-template">
+    <div class="qq-uploader-selector" style="margin-left: 10px">
+        <div class="qq-upload-drop-area-selector"><span>${_('Drop the files here to upload')}</span></div>
+        <div class="qq-upload-button-selector qq-no-float">${_('Select files')}</div> &nbsp;
+        <span class="muted">${_('or drag and drop them here')}</span>
+        <ul class="qq-upload-list-selector qq-upload-files unstyled qq-no-float" style="margin-right: 0;">
+            <li>
+                <span class="qq-upload-file-selector" style="display:none"></span>
+                <span class="qq-upload-spinner-selector hide" style="display:none"></span>
+                <div class="progress-row dz-processing">
+                    <span class="break-word qq-upload-file-selector"></span>
+                    <div class="pull-right">
+                        <span class="muted qq-upload-size-selector"></span>&nbsp;&nbsp;
+                        <a href="#" title="${_('Cancel')}" class="complex-layout"><i class="fa fa-fw fa-times qq-upload-cancel-selector"></i></a>
+                        <span class="qq-upload-done-selector" style="display:none"><i class="fa fa-fw fa-check muted"></i></span>
+                        <span class="qq-upload-failed-text-selector">${_('Failed')}</span>
+                    </div>
+                    <div class="progress-row-bar" style="width: 0%;"></div>
+                </div>
+            </li>
+        </ul>
+    </div>
+  </script>
+
 
   <script>
     var _dragged;
@@ -2022,30 +2046,45 @@ else:
 
       self.uploadFile = (function () {
         self.pendingUploads(0);
-        var action = "/filebrowser/upload/file";
+        var action = "/filebrowser/uploadchunks/";
+        // var dest = "?%2Fuser%2Fadmin"
         var uploader = new qq.FileUploader({
           element: document.getElementById("fileUploader"),
-          action: action,
-          template: '<div class="qq-uploader" style="margin-left: 10px">' +
-          '<div class="qq-upload-drop-area"><span>${_('Drop the files here to upload')}</span></div>' +
-          '<div class="qq-upload-button qq-no-float">${_('Select files')}</div> &nbsp; <span class="muted">${_('or drag and drop them here')}</span>' +
-          '<ul class="qq-upload-list qq-upload-files unstyled qq-no-float" style="margin-right: 0;"></ul>' +
-          '</div>',
-          fileTemplate: '<li><span class="qq-upload-file-extended" style="display:none"></span><span class="qq-upload-spinner hide" style="display:none"></span>' +
-          '<div class="progress-row dz-processing">' +
-          '<span class="break-word qq-upload-file"></span>' +
-          '<div class="pull-right">' +
-          '<span class="muted qq-upload-size"></span>&nbsp;&nbsp;' +
-          '<a href="#" title="${_('Cancel')}" class="complex-layout"><i class="fa fa-fw fa-times qq-upload-cancel"></i></a>' +
-          '<span class="qq-upload-done" style="display:none"><i class="fa fa-fw fa-check muted"></i></span>' +
-          '<span class="qq-upload-failed-text">${_('Failed')}</span>' +
-          '</div>' +
-          '<div class="progress-row-bar" style="width: 0%;"></div>' +
-          '</div></li>',
-          params: {
-            dest: self.currentPath(),
-            fileFieldLabel: "hdfs_file"
+          request: {
+              endpoint: action,
+              paramsInBody: false,
+              params: {
+                  dest: self.currentPath(),
+                  inputName: "hdfs_file"
+              }
           },
+          chunking: {
+              enabled: true,
+              concurrent: {
+                  enabled: true
+              },
+              success: {
+                  endpoint: "/filebrowser/uploaddone/"
+              },
+              paramNames: {
+                  partIndex: "qqpartindex",
+                  partByteOffset: "qqpartbyteoffset",
+                  chunkSize: "qqchunksize",
+                  totalFileSize: "qqtotalfilesize",
+                  totalParts: "qqtotalparts"
+              }
+          },
+
+          template: 'qq-template',
+          // params: {
+          //   dest: self.currentPath(),
+          //   fileFieldLabel: "hdfs_file",
+          //   partIndex: "qqpartindex",
+          //   partByteOffset: "qqpartbyteoffset",
+          //   chunkSize: "qqchunksize",
+          //   totalFileSize: "qqtotalfilesize",
+          //   totalParts: "qqtotalparts"
+          // },
           onProgress: function (id, fileName, loaded, total) {
             $('.qq-upload-files').find('li').each(function(){
               var listItem = $(this);
@@ -2640,7 +2679,7 @@ else:
         if (typeof _dropzone != "undefined") {
           _dropzone.enable();
         }
-        $(".qq-upload-list").empty();
+        $(".qq-upload-list-selector").empty();
         $(".qq-upload-drop-area").hide();
       });
     });
