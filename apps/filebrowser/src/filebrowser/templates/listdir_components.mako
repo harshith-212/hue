@@ -713,7 +713,7 @@ else:
                         <span class="muted qq-upload-size-selector"></span>&nbsp;&nbsp;
                         <a href="#" title="${_('Cancel')}" class="complex-layout"><i class="fa fa-fw fa-times qq-upload-cancel-selector"></i></a>
                         <span class="qq-upload-done-selector" style="display:none"><i class="fa fa-fw fa-check muted"></i></span>
-                        <span class="qq-upload-failed-text-selector">${_('Failed')}</span>
+                        <span class="qq-upload-failed-text-selector">${_('Hello Failed')}</span>
                     </div>
                     <div class="progress-row-bar" style="width: 0%;"></div>
                 </div>
@@ -2085,10 +2085,12 @@ else:
           //   totalFileSize: "qqtotalfilesize",
           //   totalParts: "qqtotalparts"
           // },
-          onProgress: function (id, fileName, loaded, total) {
+          callbacks: {
+            onProgress: function (id, fileName, loaded, total) {
+            console.log(loaded);
             $('.qq-upload-files').find('li').each(function(){
               var listItem = $(this);
-              if (listItem.find('.qq-upload-file-extended').text() == fileName){
+              if (listItem.find('.qq-upload-file-selector').text() == fileName){
                 listItem.find('.progress-row-bar').css('width', (loaded/total)*100 + '%');
               }
             });
@@ -2107,12 +2109,22 @@ else:
               self.retrieveData(true);
             }
           },
+          onTotalProgress: function(totalUploadedBytes, totalBytes) {
+            if (totalUploadedBytes == totalBytes) {
+
+            }
+          },
+          onAllComplete: function(succeeded, failed){
+            $('#uploadFileModal').modal('hide');
+          },
           onSubmit: function (id, fileName, responseJSON) {
             self.pendingUploads(self.pendingUploads() + 1);
           },
           onCancel: function (id, fileName) {
             self.pendingUploads(self.pendingUploads() - 1);
+          }
           },
+
           debug: false
         });
 
