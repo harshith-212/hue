@@ -700,20 +700,21 @@ else:
 
   <script type="text/template" id="qq-template">
     <div class="qq-uploader-selector" style="margin-left: 10px">
-        <div class="qq-upload-drop-area-selector"><span>${_('Drop the files here to upload')}</span></div>
+        <div class="qq-upload-drop-area-selector" qq-hide-dropzone><span>${_('Drop the files here to upload')}</span></div>
         <div class="qq-upload-button-selector qq-no-float">${_('Select files')}</div> &nbsp;
         <span class="muted">${_('or drag and drop them here')}</span>
+
         <ul class="qq-upload-list-selector qq-upload-files unstyled qq-no-float" style="margin-right: 0;">
             <li>
-                <span class="qq-upload-file-selector" style="display:none"></span>
                 <span class="qq-upload-spinner-selector hide" style="display:none"></span>
                 <div class="progress-row dz-processing">
                     <span class="break-word qq-upload-file-selector"></span>
                     <div class="pull-right">
+                        <span class="qq-upload-file-selector" style="display:block"></span>
                         <span class="muted qq-upload-size-selector"></span>&nbsp;&nbsp;
                         <a href="#" title="${_('Cancel')}" class="complex-layout"><i class="fa fa-fw fa-times qq-upload-cancel-selector"></i></a>
                         <span class="qq-upload-done-selector" style="display:none"><i class="fa fa-fw fa-check muted"></i></span>
-                        <span class="qq-upload-failed-text-selector">${_('Hello Failed')}</span>
+                        <span class="qq-upload-failed-text">${_('Failed')}</span>
                     </div>
                     <div class="progress-row-bar" style="width: 0%;"></div>
                 </div>
@@ -2086,43 +2087,39 @@ else:
           //   totalParts: "qqtotalparts"
           // },
           callbacks: {
-            onProgress: function (id, fileName, loaded, total) {
-            console.log(loaded);
-            $('.qq-upload-files').find('li').each(function(){
-              var listItem = $(this);
-              if (listItem.find('.qq-upload-file-selector').text() == fileName){
-                listItem.find('.progress-row-bar').css('width', (loaded/total)*100 + '%');
-              }
-            });
-          },
-          onComplete: function (id, fileName, response) {
-            self.pendingUploads(self.pendingUploads() - 1);
-            if (response.status != 0) {
-              $(document).trigger('error', "${ _('Error: ') }" + response.data);
-            }
-            else {
-              $(document).trigger('info', response.path + "${ _(' uploaded successfully.') }");
-              self.filesToHighlight.push(response.path);
-            }
-            if (self.pendingUploads() == 0) {
-              $('#uploadFileModal').modal('hide');
-              self.retrieveData(true);
-            }
-          },
-          onTotalProgress: function(totalUploadedBytes, totalBytes) {
-            if (totalUploadedBytes == totalBytes) {
+                onProgress: function (id, fileName, loaded, total) {
+                console.log(loaded);
+                $('.qq-upload-files').find('li').each(function(){
+                  var listItem = $(this);
+                  if (listItem.find('.qq-upload-file-selector').text() == fileName){
+                    listItem.find('.progress-row-bar').css('width', (loaded/total)*100 + '%');
+                  }
+                });
+              },
+              onComplete: function (id, fileName, response) {
+                self.pendingUploads(self.pendingUploads() - 1);
+                if (response.status != 0) {
+                  $(document).trigger('error', "${ _('Error: ') }" + response.data);
+                }
+                else {
+                  $(document).trigger('info', response.path + "${ _(' uploaded successfully.') }");
+                  self.filesToHighlight.push(response.path);
+                }
+                if (self.pendingUploads() == 0) {
+                  $('#uploadFileModal').modal('hide');
+                  self.retrieveData(true);
+                }
+              },
 
-            }
-          },
-          onAllComplete: function(succeeded, failed){
-            $('#uploadFileModal').modal('hide');
-          },
-          onSubmit: function (id, fileName, responseJSON) {
-            self.pendingUploads(self.pendingUploads() + 1);
-          },
-          onCancel: function (id, fileName) {
-            self.pendingUploads(self.pendingUploads() - 1);
-          }
+              onAllComplete: function(succeeded, failed){
+                $('#uploadFileModal').modal('hide');
+              },
+              onSubmit: function (id, fileName, responseJSON) {
+                self.pendingUploads(self.pendingUploads() + 1);
+              },
+              onCancel: function (id, fileName) {
+                self.pendingUploads(self.pendingUploads() - 1);
+              }
           },
 
           debug: false
