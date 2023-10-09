@@ -40,6 +40,18 @@ ARCHIVE_UPLOAD_TEMPDIR = Config(
   default=None,
   type=str)
 
+FILE_UPLOAD_CHUNK_SIZE = Config(
+  key="file_upload_chunk_size",
+  default=5000000,
+  type=int,
+  help=_('flag to change the chunk size of file upload'))
+
+CONCURRENT_MAX_CONNECTIONS = Config(
+  key="concurrent_max_connections",
+  default=5,
+  type=int,
+  help=_('flag to set the maximum number of conncurrent connections to upload file'))
+
 def get_desktop_enable_download():
   """Get desktop enable_download default"""
   return ENABLE_DOWNLOAD.get()

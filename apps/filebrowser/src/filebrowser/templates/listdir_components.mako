@@ -22,7 +22,7 @@ from django.template.defaultfilters import urlencode, stringformat, filesizeform
 from desktop.lib.django_util import reverse_with_get, extract_field_data
 from django.utils.encoding import smart_str
 
-from filebrowser.conf import ENABLE_EXTRACT_UPLOADED_ARCHIVE
+from filebrowser.conf import ENABLE_EXTRACT_UPLOADED_ARCHIVE, FILE_UPLOAD_CHUNK_SIZE, CONCURRENT_MAX_CONNECTIONS
 
 if sys.version_info[0] > 2:
   from django.utils.translation import gettext as _
@@ -2059,11 +2059,13 @@ else:
                   inputName: "hdfs_file"
               }
           },
+          maxConnections: window.CONCURRENT_MAX_CONNECTIONS || 5,
           chunking: {
               enabled: true,
               concurrent: {
                   enabled: true
               },
+              partSize: window.FILE_UPLOAD_CHUNK_SIZE || 5000000,
               success: {
                   endpoint: "/filebrowser/uploaddone/"
               },
@@ -2077,24 +2079,15 @@ else:
           },
 
           template: 'qq-template',
-          // params: {
-          //   dest: self.currentPath(),
-          //   fileFieldLabel: "hdfs_file",
-          //   partIndex: "qqpartindex",
-          //   partByteOffset: "qqpartbyteoffset",
-          //   chunkSize: "qqchunksize",
-          //   totalFileSize: "qqtotalfilesize",
-          //   totalParts: "qqtotalparts"
-          // },
           callbacks: {
-                onProgress: function (id, fileName, loaded, total) {
-                console.log(loaded);
-                $('.qq-upload-files').find('li').each(function(){
-                  var listItem = $(this);
-                  if (listItem.find('.qq-upload-file-selector').text() == fileName){
-                    listItem.find('.progress-row-bar').css('width', (loaded/total)*100 + '%');
-                  }
-                });
+              onProgress: function (id, fileName, loaded, total) {
+              console.log(loaded);
+              $('.qq-upload-files').find('li').each(function(){
+                var listItem = $(this);
+                if (listItem.find('.qq-upload-file-selector').text() == fileName){
+                  listItem.find('.progress-row-bar').css('width', (loaded/total)*100 + '%');
+                }
+              });
               },
               onComplete: function (id, fileName, response) {
                 self.pendingUploads(self.pendingUploads() - 1);
@@ -2115,6 +2108,8 @@ else:
                 $('#uploadFileModal').modal('hide');
               },
               onSubmit: function (id, fileName, responseJSON) {
+                var newPath = "/filebrowser/uploadchunks/file?dest=" + encodeURIComponent(self.currentPath());
+                this.setEndpoint(newPath);
                 self.pendingUploads(self.pendingUploads() + 1);
               },
               onCancel: function (id, fileName) {
